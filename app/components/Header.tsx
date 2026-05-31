@@ -30,7 +30,7 @@ const Header = () => {
 
       <h2 className='text-3xl mb-2'>Welcome to our app</h2>
 
-      <p className='mb-4 text-center'>
+      <p className='mb-4 text-center flex justify-center'>
         Lets start with a quick product tour and we will have you up and
         running in no time!
       </p>
