@@ -22,16 +22,18 @@ const Page = () => {
   const { backendUrl } = context as AppContextType
 
   const [otp, setOtp] = useState<string[]>(new Array(6).fill(""))
-
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token")
+    return token ? { Authorization: `Bearer ${token}` } : {}
+  }
 
   const handleChange = (value: string, index: number) => {
     if (!/^\d*$/.test(value)) return
-
     const newOtp = [...otp]
     newOtp[index] = value
     setOtp(newOtp)
-
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus()
     }
@@ -59,16 +61,14 @@ const Page = () => {
       const res = await axios.post(
         `${backendUrl}/verify-account`,
         { otp: finalOtp },
-        { withCredentials: true }
+        { headers: getAuthHeader() }  // ✅
       )
 
-      const data = res.data
-
-      if (data.success) {
-        toast.success(data.message || "Email verified successfully")
+      if (res.data.success) {
+        toast.success(res.data.message || "Email verified successfully")
         router.push("/")
       } else {
-        toast.error(data.message || "Verification failed")
+        toast.error(res.data.message || "Verification failed")
       }
     } catch (error) {
       const err = error as AxiosError<{ message: string }>
@@ -82,19 +82,15 @@ const Page = () => {
         <h2 className="text-white text-center text-2xl font-semibold mb-2">
           Email Verify OTP
         </h2>
-
         <p className="text-center text-sm text-indigo-300 mb-6">
           Enter the 6 digit code sent to your email
         </p>
-
         <form onSubmit={handleSubmit}>
           <div className="flex justify-between gap-2 mb-6">
             {otp.map((value, index) => (
               <input
                 key={index}
-                ref={(el) => {
-                  inputRefs.current[index] = el
-                }}
+                ref={(el) => { inputRefs.current[index] = el }}
                 type="text"
                 maxLength={1}
                 value={value}
@@ -104,7 +100,6 @@ const Page = () => {
               />
             ))}
           </div>
-
           <button
             type="submit"
             className="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 rounded-full"

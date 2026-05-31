@@ -35,8 +35,10 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
   const getUserData = async (): Promise<void> => {
     try {
+      const token = localStorage.getItem("token")
       const res = await axios.get(`${backendUrl}/data`, {
         withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
 
       if (res.data.success) {
@@ -56,8 +58,10 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
   const checkAuth = async (): Promise<void> => {
     try {
+      const token = localStorage.getItem("token")
       const res = await axios.get(`${backendUrl}/is-auth`, {
         withCredentials: true,
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       })
 
       if (res.data.success) {
@@ -84,6 +88,10 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
       )
 
       if (res.data.success) {
+        // ✅ token save করা হচ্ছে
+        if (res.data.token) {
+          localStorage.setItem("token", res.data.token)
+        }
         toast.success("Login successful")
         await checkAuth()
       } else {
@@ -103,6 +111,8 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
       )
 
       if (res.data.success) {
+        // ✅ logout এ token remove করা হচ্ছে
+        localStorage.removeItem("token")
         setUserData(null)
         setIsLoggedin(false)
         toast.success("Logged out")
@@ -132,6 +142,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
       await checkAuth()
     }
     init()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const value: AppContextType = {

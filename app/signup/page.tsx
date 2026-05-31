@@ -3,11 +3,10 @@
 import Image from "next/image"
 import { useState, useContext, FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
 import { assets } from "../assets/assets"
 import { AppContent } from "../context/AppContent"
-import { AxiosError } from "axios"
 
 type AppContextType = {
   backendUrl: string
@@ -31,11 +30,11 @@ const Page = () => {
     try {
       const { data } = await axios.post(
         `${backendUrl}/signup`,
-        { name, email, password },
-        { withCredentials: true }
+        { name, email, password }
       )
 
       if (data.success) {
+        localStorage.setItem("token", data.token)  // ✅
         setIsLoggedin(true)
         await getUserData()
         toast.success(data.message)
@@ -64,11 +63,9 @@ const Page = () => {
         <h2 className="text-white text-center text-2xl font-semibold mb-2">
           Create Account
         </h2>
-
         <h2 className="text-center text-sm text-indigo-300 mb-6">
           Create your Account
         </h2>
-
         <input
           placeholder="Name"
           value={name}
@@ -76,7 +73,6 @@ const Page = () => {
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
-
         <input
           placeholder="Email"
           value={email}
@@ -84,7 +80,6 @@ const Page = () => {
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
-
         <input
           type="password"
           placeholder="Password"
@@ -93,14 +88,12 @@ const Page = () => {
           className="w-full mb-4 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
-
         <button
           type="submit"
           className="bg-indigo-600 hover:bg-indigo-500 w-full p-2 text-white rounded-full"
         >
           Sign Up
         </button>
-
         <p className="text-white mt-4 text-sm">
           Already have account?
           <span
@@ -110,7 +103,6 @@ const Page = () => {
             Login
           </span>
         </p>
-
         <button
           type="button"
           onClick={googleLogin}
