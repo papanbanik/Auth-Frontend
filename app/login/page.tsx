@@ -1,21 +1,28 @@
 'use client'
 
 import Image from "next/image"
-import { useState, useContext, useEffect } from "react"
+import { useState, useContext, useEffect, FormEvent } from "react"
 import axios from "axios"
 import { toast } from "react-toastify"
 import { useRouter } from "next/navigation"
 import { AppContent } from "../context/AppContent"
 import { assets } from "../assets/assets"
+import { AxiosError } from "axios"
+
+type AppContextType = {
+  backendUrl: string
+  getUserData: () => Promise<void> | void
+}
 
 const Page = () => {
   const router = useRouter()
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [googleMode, setGoogleMode] = useState(false)
+  const [email, setEmail] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
+  const [googleMode, setGoogleMode] = useState<boolean>(false)
 
-  const { backendUrl, getUserData } = useContext(AppContent)
+  // ✅ FIX: prevent TS error (context may be null/unknown)
+  const { backendUrl, getUserData } = useContext(AppContent) as AppContextType
 
   useEffect(() => {
     getUserData()
@@ -25,7 +32,8 @@ const Page = () => {
     window.location.href = `${backendUrl}/auth/google`
   }
 
-  const handleLogin = async (e) => {
+  // ✅ FIX: proper event type
+  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
@@ -42,13 +50,18 @@ const Page = () => {
       } else {
         toast.error(data.message)
 
-        if (data.message === "Google account detected. Please login with Google") {
+        if (
+          data.message === "Google account detected. Please login with Google"
+        ) {
           setGoogleMode(true)
         }
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Server error")
-    }
+    } 
+  catch (error) {
+  const err = error as AxiosError<{ message: string }>
+
+  toast.error(err.response?.data?.message || "Server error")
+}
   }
 
   return (
@@ -97,24 +110,26 @@ const Page = () => {
             </p>
 
             <input
-              className="w-full mb-3 p-2 rounded"
+              className="w-full mb-3 p-2 rounded bg-[#333A5C] text-white"
               placeholder="Email"
+              value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
 
             <input
               type="password"
-              className="w-full mb-3 p-2 rounded"
+              className="w-full mb-3 p-2 rounded bg-[#333A5C] text-white"
               placeholder="Password"
+              value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
 
-            <button className="bg-indigo-600 w-full p-2 text-white rounded">
+            <button className="bg-indigo-600 w-full p-2 text-white rounded-full cursor-pointer">
               Login
             </button>
 
             <p className="text-white mt-4 text-sm">
-              Don't have account?{" "}
+              Don&apos;t have account?{" "}
               <span
                 onClick={() => router.push("/signup")}
                 className="text-blue-400 cursor-pointer"
@@ -128,7 +143,7 @@ const Page = () => {
             <button
               type="button"
               onClick={googleLogin}
-              className="w-full mb-4 bg-white text-black py-2 rounded flex items-center justify-center gap-2"
+              className="w-full mb-4 bg-white text-black py-3 cursor-pointer rounded-full flex items-center justify-center gap-2"
             >
               <img
                 src="https://img.icons8.com/?size=100&id=60984&format=png&color=000000"

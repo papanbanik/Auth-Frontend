@@ -1,25 +1,31 @@
 'use client'
 
 import Image from "next/image"
-import { useState, useContext } from "react"
+import { useState, useContext, FormEvent } from "react"
 import { useRouter } from "next/navigation"
 import axios from "axios"
 import { toast } from "react-toastify"
-import { assets } from '../assets/assets'
-import { AppContent } from '../context/AppContent'
+import { assets } from "../assets/assets"
+import { AppContent } from "../context/AppContent"
+import { AxiosError } from "axios"
+
+type AppContextType = {
+  backendUrl: string
+  setIsLoggedin: (value: boolean) => void
+  getUserData: () => Promise<void> | void
+}
 
 const Page = () => {
-
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-
   const router = useRouter()
 
-  const { backendUrl, setIsLoggedin, getUserData } =
-    useContext(AppContent)
+  const [name, setName] = useState<string>("")
+  const [email, setEmail] = useState<string>("")
+  const [password, setPassword] = useState<string>("")
 
-  const handleSignup = async (e) => {
+  const { backendUrl, setIsLoggedin, getUserData } =
+    useContext(AppContent) as AppContextType
+
+  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
@@ -33,13 +39,13 @@ const Page = () => {
         setIsLoggedin(true)
         await getUserData()
         toast.success(data.message)
-        router.push('/')
+        router.push("/")
       } else {
         toast.error(data.message || "Signup failed")
       }
-
     } catch (error) {
-      toast.error(error.response?.data?.message || "Server error")
+      const err = error as AxiosError<{ message: string }>
+      toast.error(err.response?.data?.message || "Server error")
     }
   }
 
@@ -55,7 +61,6 @@ const Page = () => {
         onSubmit={handleSignup}
         className="bg-slate-900 w-96 m-auto p-10 rounded-lg"
       >
-
         <h2 className="text-white text-center text-2xl font-semibold mb-2">
           Create Account
         </h2>
@@ -66,6 +71,7 @@ const Page = () => {
 
         <input
           placeholder="Name"
+          value={name}
           onChange={(e) => setName(e.target.value)}
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
@@ -73,6 +79,7 @@ const Page = () => {
 
         <input
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
@@ -81,6 +88,7 @@ const Page = () => {
         <input
           type="password"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full mb-4 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
@@ -96,7 +104,7 @@ const Page = () => {
         <p className="text-white mt-4 text-sm">
           Already have account?
           <span
-            onClick={() => router.push('/login')}
+            onClick={() => router.push("/login")}
             className="text-blue-400 cursor-pointer ml-2"
           >
             Login
@@ -106,7 +114,7 @@ const Page = () => {
         <button
           type="button"
           onClick={googleLogin}
-          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2"
+          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center cursor-pointer justify-center gap-2"
         >
           <img
             src="https://img.icons8.com/?size=100&id=60984&format=png&color=000000"
@@ -114,7 +122,6 @@ const Page = () => {
           />
           Continue with Google
         </button>
-
       </form>
     </div>
   )
