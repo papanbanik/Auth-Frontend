@@ -26,7 +26,6 @@ type AppContextType = {
 export const AppContent = createContext<AppContextType | null>(null)
 
 const AppContextProvider = ({ children }: { children: ReactNode }) => {
-
   const backendUrl =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
@@ -47,7 +46,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setUserData(null)
         setIsLoggedin(false)
       }
-    } catch (error) {
+    } catch {
       setUserData(null)
       setIsLoggedin(false)
     } finally {
@@ -68,7 +67,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedin(false)
         setUserData(null)
       }
-    } catch (error) {
+    } catch {
       setIsLoggedin(false)
       setUserData(null)
     } finally {
@@ -90,7 +89,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
       } else {
         toast.error(res.data.message)
       }
-    } catch (error) {
+    } catch {
       toast.error("Login failed")
     }
   }
@@ -108,7 +107,7 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setIsLoggedin(false)
         toast.success("Logged out")
       }
-    } catch (error) {
+    } catch {
       toast.error("Logout failed")
     }
   }
@@ -117,23 +116,23 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get("token")
 
-    if (token) {
-      localStorage.setItem("token", token)
-      toast.success("Google login successful")
+    if (!token) return
 
-      window.history.replaceState({}, document.title, "/")
+    localStorage.setItem("token", token)
+    toast.success("Google login successful")
 
+    window.history.replaceState({}, document.title, "/")
+
+    await checkAuth()
+  }
+
+  useEffect(() => {
+    const init = async () => {
+      await handleGoogleToken()
       await checkAuth()
     }
-  }
-
-useEffect(() => {
-  const init = async () => {
-    await checkAuth()
-    await handleGoogleToken()
-  }
-  init()
-}, [])
+    init()
+  }, [])
 
   const value: AppContextType = {
     backendUrl,
@@ -148,11 +147,7 @@ useEffect(() => {
     checkAuth,
   }
 
-  return (
-    <AppContent.Provider value={value}>
-      {children}
-    </AppContent.Provider>
-  )
+  return <AppContent.Provider value={value}>{children}</AppContent.Provider>
 }
 
 export default AppContextProvider
