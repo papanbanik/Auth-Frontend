@@ -3,21 +3,44 @@
 import React, { useContext, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import axios from "axios"
+import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
 import { AppContent } from "../context/AppContent"
 import { assets } from "../assets/assets"
 
+
+type UserData = {
+  email?: string
+  isAccountVerified?: boolean
+  [key: string]: unknown
+}
+
+type AppContextType = {
+  userData: UserData | null
+  backendUrl: string
+  setUserData: (value: UserData | null) => void
+}
+
+
 const Navbar = () => {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState<boolean>(false)
 
-  const { userData, backendUrl, setUserData } = useContext(AppContent)
+  const context = useContext(AppContent)
+
+  if (!context) {
+    throw new Error("AppContent must be used inside AppContextProvider")
+  }
+
+  const { userData, backendUrl, setUserData } =
+    context as AppContextType
 
   const emailFirstLetter =
-    userData?.email?.charAt(0)?.toUpperCase()
+    userData?.email?.charAt(0)?.toUpperCase() || ""
 
-  const logout = async () => {
+
+
+  const logout = async (): Promise<void> => {
     try {
       await axios.post(
         `${backendUrl}/logout`,
@@ -28,12 +51,18 @@ const Navbar = () => {
       setUserData(null)
       toast.success("Logged out")
       router.push("/login")
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message)
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>
+
+      toast.error(
+        err.response?.data?.message || err.message || "Logout failed"
+      )
     }
   }
 
-  const sendVerifyOtp = async () => {
+
+
+  const sendVerifyOtp = async (): Promise<void> => {
     try {
       const { data } = await axios.post(
         `${backendUrl}/send-verify-otp`,
@@ -46,10 +75,16 @@ const Navbar = () => {
       } else {
         toast.error(data.message)
       }
-    } catch (error) {
-      toast.error(error.response?.data?.message || error.message)
+    } catch (error: unknown) {
+      const err = error as AxiosError<{ message: string }>
+
+      toast.error(
+        err.response?.data?.message || err.message || "Request failed"
+      )
     }
   }
+
+ 
 
   return (
     <div className="w-screen flex justify-between items-center px-6 py-4 sm:px-24">
@@ -81,7 +116,7 @@ const Navbar = () => {
 
               <button
                 onClick={logout}
-                className="block cursor-pointer w-full text-left text-sm text-red-500 hover:text-red-700"
+                className="block w-full text-left text-sm text-red-500 hover:text-red-700"
               >
                 Logout
               </button>
