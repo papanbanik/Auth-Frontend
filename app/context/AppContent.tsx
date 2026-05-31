@@ -7,7 +7,7 @@ import { toast } from "react-toastify"
 type UserData = {
   email?: string
   name?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 type AppContextType = {
@@ -127,10 +127,13 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  useEffect(() => {
-    checkAuth()
-    handleGoogleToken()
-  }, [])
+useEffect(() => {
+  const init = async () => {
+    await checkAuth()
+    await handleGoogleToken()
+  }
+  init()
+}, [])
 
   const value: AppContextType = {
     backendUrl,
