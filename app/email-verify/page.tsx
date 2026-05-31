@@ -1,22 +1,31 @@
 'use client'
 
-import { useState, useRef , useContext} from "react"
-import Image from "next/image"
-import axios from "axios"
+import { useState, useRef, useContext } from "react"
+import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
 import { useRouter } from "next/navigation"
-import { assets } from "../assets/assets"
-import { AppContent } from '../context/AppContent'
+import { AppContent } from "../context/AppContent"
+
+type AppContextType = {
+  backendUrl: string
+}
 
 const Page = () => {
-
   const router = useRouter()
- const { backendUrl } = useContext(AppContent)
 
-  const [otp, setOtp] = useState(new Array(6).fill(""))
-  const inputRefs = useRef([])
+  const context = useContext(AppContent)
 
-  const handleChange = (value, index) => {
+  if (!context) {
+    throw new Error("AppContent must be used inside AppContextProvider")
+  }
+
+  const { backendUrl } = context as AppContextType
+
+  const [otp, setOtp] = useState<string[]>(new Array(6).fill(""))
+
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const handleChange = (value: string, index: number) => {
     if (!/^\d*$/.test(value)) return
 
     const newOtp = [...otp]
@@ -28,13 +37,16 @@ const Page = () => {
     }
   }
 
-  const handleKeyDown = (e, index) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus()
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     const finalOtp = otp.join("")
@@ -46,7 +58,7 @@ const Page = () => {
     try {
       const res = await axios.post(
         `${backendUrl}/verify-account`,
-        { otp: String(finalOtp) },
+        { otp: finalOtp },
         { withCredentials: true }
       )
 
@@ -58,17 +70,15 @@ const Page = () => {
       } else {
         toast.error(data.message || "Verification failed")
       }
-
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong")
+      const err = error as AxiosError<{ message: string }>
+      toast.error(err.response?.data?.message || "Something went wrong")
     }
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-amber-50">
-
       <div className="w-96 bg-slate-900 p-10 rounded-lg">
-
         <h2 className="text-white text-center text-2xl font-semibold mb-2">
           Email Verify OTP
         </h2>
@@ -78,13 +88,13 @@ const Page = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
-
           <div className="flex justify-between gap-2 mb-6">
-
             {otp.map((value, index) => (
               <input
                 key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
+                ref={(el) => {
+                  inputRefs.current[index] = el
+                }}
                 type="text"
                 maxLength={1}
                 value={value}
@@ -93,7 +103,6 @@ const Page = () => {
                 className="w-12 h-12 text-center text-white text-xl bg-[#333A5C] rounded-md outline-none"
               />
             ))}
-
           </div>
 
           <button
@@ -102,9 +111,7 @@ const Page = () => {
           >
             Verify OTP
           </button>
-
         </form>
-
       </div>
     </div>
   )
