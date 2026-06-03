@@ -28,7 +28,8 @@ export default function Page() {
   // ✅ Google login handler (safe + stable)
   useEffect(() => {
     if (!token) return
-
+     const isLoggedOut = localStorage.getItem("logout") === "true"
+  if (isLoggedOut) return
     const handleGoogleLogin = async () => {
       try {
         if (typeof window !== "undefined") {

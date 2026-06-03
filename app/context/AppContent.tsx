@@ -1,166 +1,347 @@
 "use client"
 
 
+
 import { createContext, useEffect, useState, ReactNode } from "react"
+
 import axios from "axios"
+
 import { toast } from "react-toastify"
 
+
+
 type UserData = {
+
   email?: string
+
   name?: string
+
   isAccountVerified?: boolean
 
 }
 
+
+
 type AppContextType = {
+
   backendUrl: string
+
   isLoggedin: boolean
+
   userData: UserData | null
+
   loading: boolean
+
   setIsLoggedin: (v: boolean) => void
+
   setUserData: (v: UserData | null) => void
+
   loginUser: (email: string, password: string) => Promise<boolean>
 
   logout: () => Promise<void>
+
   checkAuth: () => Promise<void>
+
 }
+
+
 
 export const AppContent = createContext<AppContextType | null>(null)
 
+
+
 export default function AppContextProvider({
+
   children,
+
 }: {
+
   children: ReactNode
+
 }) {
+
   const backendUrl =
+
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001"
 
+
+
   const [isLoggedin, setIsLoggedin] = useState(false)
+
   const [userData, setUserData] = useState<UserData | null>(null)
+
   const [loading, setLoading] = useState(true)
 
+
+
   const getToken = () =>
+
     typeof window !== "undefined" ? localStorage.getItem("token") : null
 
-const checkAuth = async () => {
-  try {
-    const token = getToken()
 
-    if (!token) {
-      setIsLoggedin(false)
-      setUserData(null)
-      return
-    }
 
-    const res = await axios.get(`${backendUrl}/data`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+  // ================= CHECK AUTH =================
 
-    if (res.data.success) {
-      setUserData(res.data.uservalue)   // ✅ ALWAYS UPDATE
-      setIsLoggedin(true)
-    } else {
-      localStorage.removeItem("token")
-      setUserData(null)
-      setIsLoggedin(false)
-    }
-  } catch {
-    localStorage.removeItem("token")
-    setUserData(null)
-    setIsLoggedin(false)
-  } finally {
-    setLoading(false)
-  }
-}
+  const checkAuth = async () => {
 
-  // ✅ LOGIN
-  const loginUser = async (
-    email: string,
-    password: string
-  ): Promise<boolean> => {
     try {
-      const res = await axios.post(`${backendUrl}/login`, {
-        email,
-        password,
+
+      const token = getToken()
+
+
+
+      // ❌ BLOCK AUTO LOGIN AFTER LOGOUT
+
+      const isLoggedOut = localStorage.getItem("logout") === "true"
+
+      if (isLoggedOut) {
+
+        setIsLoggedin(false)
+
+        setUserData(null)
+
+        setLoading(false)
+
+        return
+
+      }
+
+
+
+      if (!token) {
+
+        setIsLoggedin(false)
+
+        setUserData(null)
+
+        setLoading(false)
+
+        return
+
+      }
+
+
+
+      const res = await axios.get(`${backendUrl}/data`, {
+
+        headers: { Authorization: `Bearer ${token}` },
+
       })
 
-      if (!res.data.success || !res.data.token) {
-        toast.error(res.data.message || "Invalid credentials")
-        return false
+
+
+      if (res.data.success) {
+
+        setUserData(res.data.uservalue)
+
+        setIsLoggedin(true)
+
+      } else {
+
+        localStorage.removeItem("token")
+
+        setUserData(null)
+
+        setIsLoggedin(false)
+
       }
+
+    } catch {
+
+      localStorage.removeItem("token")
+
+      setUserData(null)
+
+      setIsLoggedin(false)
+
+    } finally {
+
+      setLoading(false)
+
+    }
+
+  }
+
+
+
+  // ================= LOGIN =================
+
+  const loginUser = async (
+
+    email: string,
+
+    password: string
+
+  ): Promise<boolean> => {
+
+    try {
+
+      const res = await axios.post(`${backendUrl}/login`, {
+
+        email,
+
+        password,
+
+      })
+
+
+
+      if (!res.data.success || !res.data.token) {
+
+        toast.error(res.data.message || "Invalid credentials")
+
+        return false
+
+      }
+
+
+
+      // 🔥 REMOVE LOGOUT FLAG ON LOGIN
+
+      localStorage.removeItem("logout")
+
+
 
       localStorage.setItem("token", res.data.token)
 
+
+
       toast.success("Login successful")
+
+
 
       await checkAuth()
 
+
+
       return true
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Login failed")
-      } else {
-        toast.error("Login failed")
-      }
+
+    } catch {
+
+      toast.error("Login failed")
+
       return false
+
     }
+
   }
 
-  // ✅ LOGOUT
+
+
+  // ================= LOGOUT =================
+
   const logout = async () => {
+
     try {
+
       const token = getToken()
 
+
+
       await axios.post(
+
         `${backendUrl}/logout`,
+
         {},
+
         {
-          headers: token
-            ? { Authorization: `Bearer ${token}` }
-            : {},
+
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+
         }
+
       )
 
+
+
+      // 🔥 CLEAN EVERYTHING PROPERLY
+
       localStorage.removeItem("token")
+
+      localStorage.removeItem("logout")
+
+
+
       setUserData(null)
+
       setIsLoggedin(false)
+
+
 
       toast.success("Logged out")
 
     } catch {
+
       toast.error("Logout failed")
+
     }
+
   }
 
- useEffect(() => {
+
+
+  // ================= INITIAL AUTH CHECK =================
+
+   useEffect(() => {
+
   let mounted = true
 
+
+
   const run = async () => {
+
     if (mounted) await checkAuth()
+
   }
+
+
 
   run()
 
+
+
   return () => {
+
     mounted = false
+
   }
-}, [])
+
+}, []) 
+
+
 
   return (
+
     <AppContent.Provider
+
       value={{
+
         backendUrl,
+
         isLoggedin,
+
         userData,
+
         loading,
+
         setIsLoggedin,
+
         setUserData,
+
         loginUser,
+
         logout,
+
         checkAuth,
+
       }}
+
     >
+
       {children}
+
     </AppContent.Provider>
+
   )
+
 }

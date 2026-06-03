@@ -25,18 +25,24 @@ export default function Page() {
   const { backendUrl, setIsLoggedin, checkAuth } =
     useContext(AppContent) as AppContextType
 
-  // ✅ FIX: stable token extraction
   const token = searchParams.get("token")
 
   // ---------------- GOOGLE LOGIN ----------------
   useEffect(() => {
     if (!token) return
 
+    // 🔥 BLOCK AUTO LOGIN AFTER LOGOUT
+    const isLoggedOut = localStorage.getItem("logout") === "true"
+    if (isLoggedOut) return
+
     const handleGoogleLogin = async () => {
       try {
         if (typeof window !== "undefined") {
           localStorage.setItem("token", token)
         }
+
+        // 🔥 clear logout flag after successful login
+        localStorage.removeItem("logout")
 
         await checkAuth()
         setIsLoggedin(true)
@@ -63,6 +69,9 @@ export default function Page() {
 
       if (data.success) {
         localStorage.setItem("token", data.token)
+
+        // 🔥 clear logout flag
+        localStorage.removeItem("logout")
 
         setIsLoggedin(true)
         await checkAuth()
