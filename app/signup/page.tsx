@@ -1,8 +1,8 @@
 'use client'
 
 import Image from "next/image"
-import { useState, useContext, FormEvent } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useContext, FormEvent } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
 import { assets } from "../assets/assets"
@@ -12,19 +12,41 @@ type AppContextType = {
   backendUrl: string
   setIsLoggedin: (value: boolean) => void
   checkAuth: () => Promise<void>
-
 }
 
 const Page = () => {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const [name, setName] = useState<string>("")
-  const [email, setEmail] = useState<string>("")
-  const [password, setPassword] = useState<string>("")
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
 
-  const { backendUrl, setIsLoggedin, checkAuth  } =
+  const { backendUrl, setIsLoggedin, checkAuth } =
     useContext(AppContent) as AppContextType
-    const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
+
+  // ---------------- GOOGLE LOGIN SUCCESS ----------------
+  useEffect(() => {
+  const token = searchParams.get("token")
+
+  if (!token) return
+
+  const handleGoogleLogin = async () => {
+    localStorage.setItem("token", token)
+
+    try {
+      await checkAuth()   // 🔥 FIRST sync user
+      toast.success("Google login successful")
+      router.push("/")
+    } catch {
+      toast.error("Google login failed")
+    }
+  }
+
+  handleGoogleLogin()
+}, [])
+  // ---------------- SIGNUP ----------------
+  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
@@ -34,9 +56,11 @@ const Page = () => {
       )
 
       if (data.success) {
-        localStorage.setItem("token", data.token)  // ✅
+        localStorage.setItem("token", data.token)
+
         setIsLoggedin(true)
         await checkAuth()
+
         toast.success(data.message)
         router.push("/")
       } else {
@@ -48,6 +72,7 @@ const Page = () => {
     }
   }
 
+  // ---------------- GOOGLE LOGIN ----------------
   const googleLogin = () => {
     window.location.href = `${backendUrl}/auth/google`
   }
@@ -63,9 +88,11 @@ const Page = () => {
         <h2 className="text-white text-center text-2xl font-semibold mb-2">
           Create Account
         </h2>
+
         <h2 className="text-center text-sm text-indigo-300 mb-6">
           Create your Account
         </h2>
+
         <input
           placeholder="Name"
           value={name}
@@ -73,6 +100,7 @@ const Page = () => {
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
+
         <input
           placeholder="Email"
           value={email}
@@ -80,6 +108,7 @@ const Page = () => {
           className="w-full mb-3 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
+
         <input
           type="password"
           placeholder="Password"
@@ -88,12 +117,14 @@ const Page = () => {
           className="w-full mb-4 px-5 py-2.5 rounded-full bg-[#333A5C] text-white outline-none"
           required
         />
+
         <button
           type="submit"
           className="bg-indigo-600 hover:bg-indigo-500 w-full p-2 text-white rounded-full"
         >
           Sign Up
         </button>
+
         <p className="text-white mt-4 text-sm">
           Already have account?
           <span
@@ -103,10 +134,12 @@ const Page = () => {
             Login
           </span>
         </p>
+
+        {/* GOOGLE LOGIN */}
         <button
           type="button"
           onClick={googleLogin}
-          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center cursor-pointer justify-center gap-2"
+          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2"
         >
           <img
             src="https://img.icons8.com/?size=100&id=60984&format=png&color=000000"

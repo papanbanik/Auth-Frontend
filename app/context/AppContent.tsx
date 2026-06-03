@@ -42,21 +42,13 @@ export default function AppContextProvider({
   const getToken = () =>
     typeof window !== "undefined" ? localStorage.getItem("token") : null
 
- const checkAuth = async () => {
+const checkAuth = async () => {
   try {
     const token = getToken()
 
     if (!token) {
-      setIsLoggedin((prev) => {
-        if (prev === false) return prev
-        return false
-      })
-
-      setUserData((prev) => {
-        if (prev === null) return prev
-        return null
-      })
-
+      setIsLoggedin(false)
+      setUserData(null)
       return
     }
 
@@ -65,17 +57,8 @@ export default function AppContextProvider({
     })
 
     if (res.data.success) {
-      setUserData((prev) => {
-        if (JSON.stringify(prev) === JSON.stringify(res.data.uservalue)) {
-          return prev
-        }
-        return res.data.uservalue
-      })
-
-      setIsLoggedin((prev) => {
-        if (prev === true) return prev
-        return true
-      })
+      setUserData(res.data.uservalue)   // ✅ ALWAYS UPDATE
+      setIsLoggedin(true)
     } else {
       localStorage.removeItem("token")
       setUserData(null)
