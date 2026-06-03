@@ -9,11 +9,8 @@ import { assets } from "../assets/assets"
 
 type AppContextType = {
   backendUrl: string
-<<<<<<< HEAD
   loginUser: (email: string, password: string) => Promise<boolean>
-=======
-  loginUser: (email: string, password: string) => Promise<void>
->>>>>>> 67082843cd44f8ed310c18e20f1e63fefef1a451
+
 }
 
 const Page = () => {
@@ -29,7 +26,6 @@ const Page = () => {
     window.location.href = `${backendUrl}/auth/google`
   }
 
-<<<<<<< HEAD
  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault()
 
@@ -39,14 +35,6 @@ const Page = () => {
     router.push("/")
   }
 }
-=======
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    await loginUser(email, password)
-    router.push("/")
-  }
->>>>>>> 67082843cd44f8ed310c18e20f1e63fefef1a451
-
   return (
     <div>
       <div>
