@@ -1,6 +1,5 @@
 "use client"
 
-
 import { createContext, useEffect, useState, ReactNode } from "react"
 import axios from "axios"
 import { toast } from "react-toastify"
@@ -9,7 +8,6 @@ type UserData = {
   email?: string
   name?: string
   isAccountVerified?: boolean
-
 }
 
 type AppContextType = {
@@ -20,7 +18,6 @@ type AppContextType = {
   setIsLoggedin: (v: boolean) => void
   setUserData: (v: UserData | null) => void
   loginUser: (email: string, password: string) => Promise<boolean>
-
   logout: () => Promise<void>
   checkAuth: () => Promise<void>
 }
@@ -143,7 +140,6 @@ export default function AppContextProvider({
       setIsLoggedin(false)
 
       toast.success("Logged out")
-
     } catch {
       toast.error("Logout failed")
     }

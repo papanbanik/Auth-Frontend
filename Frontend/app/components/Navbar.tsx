@@ -4,7 +4,6 @@ import React, { useContext, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import axios from "axios"
-
 import { toast } from "react-toastify"
 import { AppContent } from "../context/AppContent"
 import { assets } from "../assets/assets"
@@ -12,7 +11,6 @@ import { assets } from "../assets/assets"
 type UserData = {
   email?: string
   isAccountVerified?: boolean
-
 }
 
 type AppContextType = {
@@ -28,7 +26,6 @@ const Navbar = () => {
   const [open, setOpen] = useState(false)
 
   const context = useContext(AppContent) as AppContextType | undefined
-
 
   if (!context) {
     throw new Error("AppContent must be used inside AppContextProvider")
@@ -94,13 +91,11 @@ const Navbar = () => {
             Authorization: `Bearer ${token}`,
           },
         }
-
       )
 
       if (data.success) {
         toast.success(data.message)
         router.push("/email-verify")
-
       } else {
         toast.error(data.message)
       }
@@ -113,13 +108,11 @@ const Navbar = () => {
     }
   }
 
-
   return (
     <div className="w-screen flex justify-between items-center px-6 py-4 sm:px-24">
       <Image src={assets.logo} alt="logo" className="w-28 sm:w-32" />
 
       {isLoggedin && userData ? (
-
         <div className="relative">
           <div
             onClick={() => setOpen(!open)}

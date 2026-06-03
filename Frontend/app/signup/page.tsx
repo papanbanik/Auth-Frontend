@@ -12,7 +12,6 @@ type AppContextType = {
   backendUrl: string
   setIsLoggedin: (value: boolean) => void
   checkAuth: () => Promise<void>
-
 }
 
 const Page = () => {
@@ -24,7 +23,8 @@ const Page = () => {
 
   const { backendUrl, setIsLoggedin, checkAuth  } =
     useContext(AppContent) as AppContextType
-    const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
+
+  const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
