@@ -39,37 +39,53 @@ export default function AppContextProvider({
   const getToken = () =>
     typeof window !== "undefined" ? localStorage.getItem("token") : null
 
-  // ✅ ONLY RESPONSIBLE FOR USER FETCH
-  const checkAuth = async () => {
-    try {
-      const token = getToken()
+ const checkAuth = async () => {
+  try {
+    const token = getToken()
 
-      if (!token) {
-        setIsLoggedin(false)
-        setUserData(null)
-        return
-      }
-
-      const res = await axios.get(`${backendUrl}/data`, {
-        headers: { Authorization: `Bearer ${token}` },
+    if (!token) {
+      setIsLoggedin((prev) => {
+        if (prev === false) return prev
+        return false
       })
 
-      if (res.data.success) {
-        setUserData(res.data.uservalue)
-        setIsLoggedin(true)
-      } else {
-        localStorage.removeItem("token")
-        setUserData(null)
-        setIsLoggedin(false)
-      }
-    } catch {
+      setUserData((prev) => {
+        if (prev === null) return prev
+        return null
+      })
+
+      return
+    }
+
+    const res = await axios.get(`${backendUrl}/data`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    if (res.data.success) {
+      setUserData((prev) => {
+        if (JSON.stringify(prev) === JSON.stringify(res.data.uservalue)) {
+          return prev
+        }
+        return res.data.uservalue
+      })
+
+      setIsLoggedin((prev) => {
+        if (prev === true) return prev
+        return true
+      })
+    } else {
       localStorage.removeItem("token")
       setUserData(null)
       setIsLoggedin(false)
-    } finally {
-      setLoading(false)
     }
+  } catch {
+    localStorage.removeItem("token")
+    setUserData(null)
+    setIsLoggedin(false)
+  } finally {
+    setLoading(false)
   }
+}
 
   // ✅ LOGIN
   const loginUser = async (
@@ -129,10 +145,19 @@ export default function AppContextProvider({
     }
   }
 
-  // ✅ RUN ONLY ONCE
-  useEffect(() => {
-    checkAuth()
-  }, [])
+ useEffect(() => {
+  let mounted = true
+
+  const run = async () => {
+    if (mounted) await checkAuth()
+  }
+
+  run()
+
+  return () => {
+    mounted = false
+  }
+}, [])
 
   return (
     <AppContent.Provider

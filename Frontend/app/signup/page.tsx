@@ -11,7 +11,7 @@ import { AppContent } from "../context/AppContent"
 type AppContextType = {
   backendUrl: string
   setIsLoggedin: (value: boolean) => void
-  getUserData: () => Promise<void> | void
+  checkAuth: () => Promise<void>
 }
 
 const Page = () => {
@@ -21,7 +21,7 @@ const Page = () => {
   const [email, setEmail] = useState<string>("")
   const [password, setPassword] = useState<string>("")
 
-  const { backendUrl, setIsLoggedin, getUserData } =
+  const { backendUrl, setIsLoggedin, checkAuth  } =
     useContext(AppContent) as AppContextType
 
   const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
@@ -36,7 +36,7 @@ const Page = () => {
       if (data.success) {
         localStorage.setItem("token", data.token)  // ✅
         setIsLoggedin(true)
-        await getUserData()
+        await checkAuth()
         toast.success(data.message)
         router.push("/")
       } else {

@@ -8,7 +8,6 @@ import { toast } from "react-toastify"
 import { AppContent } from "../context/AppContent"
 import { assets } from "../assets/assets"
 
-// ---------------- TYPES ----------------
 type UserData = {
   email?: string
   isAccountVerified?: boolean
@@ -64,14 +63,13 @@ const Navbar = () => {
 
       toast.success("Logged out")
       router.push("/login")
-    } 
-  catch (error: unknown) {
-  if (axios.isAxiosError(error)) {
-    toast.error(error.response?.data?.message || "Logout failed")
-  } else {
-    toast.error("Logout failed")
-  }
-}
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Logout failed")
+      } else {
+        toast.error("Logout failed")
+      }
+    }
   }
 
   // ---------------- SEND VERIFY OTP ----------------
@@ -101,17 +99,15 @@ const Navbar = () => {
       } else {
         toast.error(data.message)
       }
-    } 
-catch (error: unknown) {
-  if (axios.isAxiosError(error)) {
-    toast.error(error.response?.data?.message || "Logout failed")
-  } else {
-    toast.error("Logout failed")
-  }
-}
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        toast.error(error.response?.data?.message || "Request failed")
+      } else {
+        toast.error("Request failed")
+      }
+    }
   }
 
-  // ---------------- UI ----------------
   return (
     <div className="w-screen flex justify-between items-center px-6 py-4 sm:px-24">
       <Image src={assets.logo} alt="logo" className="w-28 sm:w-32" />
