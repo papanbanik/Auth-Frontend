@@ -29,29 +29,27 @@ const Page = () => {
   const [loading, setLoading] = useState(false)
 
   // ✅ GOOGLE LOGIN SUCCESS HANDLER
-  useEffect(() => {
-    const token = searchParams.get("token")
+useEffect(() => {
+  const token = searchParams?.get("token")
 
-    if (!token) return
+  if (!token) return
 
-    const handleGoogleLogin = async () => {
-      try {
-        localStorage.setItem("token", token)
+  const handleGoogleLogin = async () => {
+    try {
+      localStorage.setItem("token", token)
 
-        await checkAuth()
+      await checkAuth()
+      setIsLoggedin(true)
 
-        setIsLoggedin(true)
-
-        toast.success("Google login successful")
-        router.push("/")
-      } catch (err) {
-        toast.error("Google login failed")
-      }
+      toast.success("Google login successful")
+      router.push("/")
+    } catch (err) {
+      toast.error("Google login failed")
     }
+  }
 
-    handleGoogleLogin()
-  }, [searchParams])
-
+  handleGoogleLogin()
+}, [searchParams, checkAuth, router, setIsLoggedin])
   // ✅ EMAIL LOGIN
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
