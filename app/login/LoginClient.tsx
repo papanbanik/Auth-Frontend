@@ -35,10 +35,9 @@ export default function Page() {
         if (typeof window !== "undefined") {
           localStorage.setItem("token", token)
         }
-
         await checkAuth()
         setIsLoggedin(true)
-
+        window.history.replaceState({},"", "/login")
         toast.success("Google login successful")
         router.push("/")
       } catch (err) {
