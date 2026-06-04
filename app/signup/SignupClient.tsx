@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useState, useEffect, useContext, FormEvent } from "react"
+import { useState, useEffect, useContext, useRef, FormEvent } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
@@ -26,46 +26,55 @@ export default function Page() {
     useContext(AppContent) as AppContextType
 
   const token = searchParams.get("token")
+  const processedToken = useRef(false) // ✅ prevent double run
 
-useEffect(() => {
-  if (!token) return
+  // ================= GOOGLE TOKEN HANDLER =================
+  useEffect(() => {
+    if (!token || token.length < 10) return
+    if (processedToken.current) return // ✅ already processed
 
-  const isLoggedOut = localStorage.getItem("logout") === "true"
-  if (isLoggedOut) return
-
-  const handleGoogleLogin = async () => {
-    try {
-      localStorage.setItem("token", token)
-      localStorage.removeItem("logout")
-
-      await checkAuth()
-      setIsLoggedin(true)
-
-      toast.success("Google login successful")
-      router.push("/")
-    } catch {
-      toast.error("Google login failed")
+    // ✅ Check logout flag — don't auto login if user logged out
+    const isLoggedOut = localStorage.getItem("logout") === "true"
+    if (isLoggedOut) {
+      window.history.replaceState({}, "", "/signup") // clean URL
+      return
     }
-  }
 
-  handleGoogleLogin()
-}, [token])
+    processedToken.current = true // ✅ mark as processed
 
-  // ---------------- SIGNUP ----------------
+    const handleGoogleLogin = async () => {
+      try {
+        localStorage.setItem("token", token)
+        localStorage.removeItem("logout") // ✅ clear flag on intentional login
+
+        await checkAuth()
+        setIsLoggedin(true)
+
+        window.history.replaceState({}, "", "/signup") // ✅ clean URL
+        toast.success("Google signup successful")
+        router.push("/")
+      } catch {
+        toast.error("Google login failed")
+      }
+    }
+
+    handleGoogleLogin()
+  }, [token])
+
+  // ================= EMAIL SIGNUP =================
   const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
 
     try {
-      const { data } = await axios.post(
-        `${backendUrl}/signup`,
-        { name, email, password }
-      )
+      const { data } = await axios.post(`${backendUrl}/signup`, {
+        name,
+        email,
+        password,
+      })
 
       if (data.success) {
         localStorage.setItem("token", data.token)
-
-        // 🔥 clear logout flag
-        localStorage.removeItem("logout")
+        localStorage.removeItem("logout") // ✅ clear flag on intentional signup
 
         setIsLoggedin(true)
         await checkAuth()
@@ -81,8 +90,9 @@ useEffect(() => {
     }
   }
 
-  // ---------------- GOOGLE LOGIN ----------------
+  // ================= GOOGLE REDIRECT =================
   const googleLogin = () => {
+    localStorage.removeItem("logout") // ✅ clear flag before Google redirect
     window.location.href = `${backendUrl}/auth/google`
   }
 
@@ -147,7 +157,8 @@ useEffect(() => {
         <button
           type="button"
           onClick={googleLogin}
-          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2">
+          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2"
+        >
           <img
             src="https://img.icons8.com/?size=100&id=60984&format=png&color=000000"
             className="w-5"
