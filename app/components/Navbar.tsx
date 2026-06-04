@@ -21,6 +21,7 @@ type AppContextType = {
   setUserData: React.Dispatch<React.SetStateAction<UserData | null>>
   setIsLoggedin: React.Dispatch<React.SetStateAction<boolean>>
   isLoggedin: boolean
+  logout: () => Promise<void>
 }
 
 const Navbar = () => {
@@ -37,42 +38,17 @@ const Navbar = () => {
   const {
     userData,
     backendUrl,
-    setUserData,
-    setIsLoggedin,
     isLoggedin,
+    logout,
   } = context
 
   const emailFirstLetter =
     userData?.email?.charAt(0)?.toUpperCase() ?? ""
 
   // ---------------- LOGOUT ----------------
-  const logout = async () => {
-    try {
-      const token = localStorage.getItem("token")
-
-      await axios.post(
-        `${backendUrl}/logout`,
-        {},
-        {
-          headers: token
-            ? { Authorization: `Bearer ${token}` }
-            : {},
-        }
-      )
-
-      localStorage.removeItem("token")
-      setUserData(null)
-      setIsLoggedin(false)
-
-      toast.success("Logged out")
-      router.push("/login")
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || "Logout failed")
-      } else {
-        toast.error("Logout failed")
-      }
-    }
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
   }
 
   // ---------------- SEND VERIFY OTP ----------------
@@ -144,7 +120,7 @@ const Navbar = () => {
               )}
 
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="block w-full text-left text-sm text-red-500 hover:text-red-700"
               >
                 Logout
