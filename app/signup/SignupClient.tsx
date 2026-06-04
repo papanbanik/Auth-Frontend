@@ -27,35 +27,29 @@ export default function Page() {
 
   const token = searchParams.get("token")
 
-  // ---------------- GOOGLE LOGIN ----------------
-  useEffect(() => {
-    if (!token) return
+useEffect(() => {
+  if (!token) return
 
-    // 🔥 BLOCK AUTO LOGIN AFTER LOGOUT
-    const isLoggedOut = localStorage.getItem("logout") === "true"
-    if (isLoggedOut) return
+  const isLoggedOut = localStorage.getItem("logout") === "true"
+  if (isLoggedOut) return
 
-    const handleGoogleLogin = async () => {
-      try {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("token", token)
-        }
+  const handleGoogleLogin = async () => {
+    try {
+      localStorage.setItem("token", token)
+      localStorage.removeItem("logout")
 
-        // 🔥 clear logout flag after successful login
-        localStorage.removeItem("logout")
+      await checkAuth()
+      setIsLoggedin(true)
 
-        await checkAuth()
-        setIsLoggedin(true)
-
-        toast.success("Google login successful")
-        router.push("/")
-      } catch {
-        toast.error("Google login failed")
-      }
+      toast.success("Google login successful")
+      router.push("/")
+    } catch {
+      toast.error("Google login failed")
     }
+  }
 
-    handleGoogleLogin()
-  }, [token, checkAuth, setIsLoggedin, router])
+  handleGoogleLogin()
+}, [token])
 
   // ---------------- SIGNUP ----------------
   const handleSignup = async (e: FormEvent<HTMLFormElement>) => {
@@ -153,8 +147,7 @@ export default function Page() {
         <button
           type="button"
           onClick={googleLogin}
-          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2"
-        >
+          className="w-full mt-4 bg-white text-black py-2 rounded-full flex items-center justify-center gap-2">
           <img
             src="https://img.icons8.com/?size=100&id=60984&format=png&color=000000"
             className="w-5"

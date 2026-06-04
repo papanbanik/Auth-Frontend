@@ -10,7 +10,6 @@ import { assets } from "../assets/assets"
 export default function Page() {
   const router = useRouter()
   const searchParams = useSearchParams()
-
   const context = useContext(AppContent)
 
   if (!context) {
@@ -22,33 +21,46 @@ export default function Page() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   const token = searchParams.get("token")
 
-  // ✅ Google login handler (safe + stable)
+  // ================= GOOGLE LOGIN =================
   useEffect(() => {
-    if (!token) return
-     const isLoggedOut = localStorage.getItem("logout") === "true"
-  if (isLoggedOut) return
+    if (!token || token.length < 10) return
+
+    const isLoggedOut = localStorage.getItem("logout") === "true"
+
+    if (isLoggedOut) {
+      localStorage.removeItem("logout")
+      return
+    }
+
     const handleGoogleLogin = async () => {
+      setGoogleLoading(true)
+
       try {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("token", token)
-        }
+        localStorage.setItem("token", token)
+
         await checkAuth()
         setIsLoggedin(true)
-        window.history.replaceState({},"", "/login")
+
+        // clean URL (remove token from address bar)
+        window.history.replaceState({}, "", "/login")
+
         toast.success("Google login successful")
         router.push("/")
       } catch (err) {
         toast.error("Google login failed")
+      } finally {
+        setGoogleLoading(false)
       }
     }
 
     handleGoogleLogin()
-  }, [token, checkAuth, setIsLoggedin, router])
+  }, [token])
 
-  // ✅ Email login
+  // ================= EMAIL LOGIN =================
   const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
@@ -64,19 +76,21 @@ export default function Page() {
       }
     } catch {
       toast.error("Login failed")
+    } finally {
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
-  // ✅ Google redirect
+  // ================= GOOGLE REDIRECT =================
   const googleLogin = () => {
     window.location.href = `${backendUrl}/auth/google`
   }
 
   return (
+    <>
+     <Image src={assets.logo} alt="logo" className="w-28 p-4" />
     <div className="min-h-screen flex flex-col items-center justify-center">
-      <Image src={assets.logo} alt="logo" className="w-28 mb-6" />
+     
 
       <form
         onSubmit={handleLogin}
@@ -105,21 +119,33 @@ export default function Page() {
 
         <button
           disabled={loading}
-          className="bg-indigo-600 w-full p-2 text-white rounded-full"
+          className="bg-indigo-600 w-full p-2 text-white rounded-full disabled:opacity-50"
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+        
+        <p className="text-white mt-4 text-sm ">
+          Don't have an account?
+          <span
+            onClick={() => router.push("/signup")}
+            className="text-blue-400  cursor-pointer ml-2"
+          >
+            Sign up
+          </span>
+        </p>
 
         <div className="text-gray-400 text-center my-3">OR</div>
 
         <button
           type="button"
           onClick={googleLogin}
-          className="w-full bg-white text-black py-3 rounded-full flex items-center justify-center gap-2"
+          disabled={googleLoading}
+          className="w-full bg-white text-black py-3 rounded-full flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          Continue with Google
+          {googleLoading ? "Redirecting..." : "Continue with Google"}
         </button>
       </form>
     </div>
+    </>
   )
 }
