@@ -29,7 +29,7 @@ const Page = () => {
   return (
     <>
       <Navbar />
-      <main style={{ maxWidth: '720px', margin: '40px auto', padding: '0 16px' }}>
+      <main style={{ maxWidth: '900px', margin: '40px auto', padding: '0 16px' }}>
         <section style={{ display: 'grid', gap: '24px', background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <img
