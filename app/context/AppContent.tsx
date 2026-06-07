@@ -1,13 +1,18 @@
 "use client"
 
 import { createContext, useEffect, useState, ReactNode } from "react"
-import axios from "axios"
+import axios,{AxiosError} from "axios"
 import { toast } from "react-toastify"
 
 type UserData = {
   email?: string
   name?: string
   isAccountVerified?: boolean
+}
+type LoginErrorResponse = {
+  success?: false
+  message?: string
+  code?: string
 }
 
 type AppContextType = {
@@ -105,8 +110,15 @@ export default function AppContextProvider({
       await checkAuth()
 
       return true
-    } catch {
-      toast.error("Login failed")
+    } 
+    catch(error:unknown) {
+      const err= error as AxiosError<LoginErrorResponse>
+     const res= err.response?.data
+     if(res?.code==="GOOGLE_ACCOUNT") {
+        toast.error("Google account detected. Please use Google Sign In.")
+      } else {
+        toast.error(res?.message ||"Login failed")
+      }
       return false
     }
   }

@@ -91,7 +91,7 @@ const Navbar = () => {
 
 
   return (
-    <div className="w-screen flex justify-between items-center px-6 py-4 sm:px-24">
+    <div className="w-screen flex justify-between items-center px-6 py-4 sm:px-10">
       <Image src={assets.logo} alt="logo" className="w-28 sm:w-32" />
 
       {isLoggedin && userData ? (
@@ -113,12 +113,17 @@ const Navbar = () => {
               ) : (
                 <button
                   onClick={sendVerifyOtp}
-                  className="block w-full text-left text-sm hover:text-indigo-500 mb-2"
+                  className="block w-full text-left text-sm hover:text-indigo-500 mb-2 font-semibold"
                 >
                   Verify Email
                 </button>
               )}
-
+               <button
+                onClick={() => router.push('/profile')}
+                className="block w-full text-left text-sm hover:text-indigo-500 mb-2 font-semibold "
+              >
+                Profile
+              </button>
               <button
                 onClick={handleLogout}
                 className="block w-full text-left text-sm text-red-500 hover:text-red-700"
