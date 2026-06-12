@@ -45,7 +45,6 @@ export default function Page() {
         localStorage.setItem("token", token)
         localStorage.removeItem("logout") // ✅ clear flag on intentional login
         await checkAuth()
-        setIsLoggedin(true)
         window.history.replaceState({}, "", "/login") // ✅ clean URL
         toast.success("Google login successful")
         router.push("/")
@@ -60,23 +59,22 @@ export default function Page() {
   }, [token])
 
   // ================= EMAIL LOGIN =================
-  const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setLoading(true)
+const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      localStorage.removeItem("logout") // ✅ clear flag on intentional login
-      const success = await loginUser(email, password)
+  try {
+    const success = await loginUser(email, password)
 
-      if (success) {
-        router.push("/")
-      }
-    } catch {
-      toast.error("Login failed")
-    } finally {
-      setLoading(false)
+    if (success) {
+      router.push("/")   // ONLY HERE redirect
     }
+  } catch {
+    toast.error("Login failed")
+  } finally {
+    setLoading(false)
   }
+}
 
   // ================= GOOGLE REDIRECT =================
   const googleLogin = () => {

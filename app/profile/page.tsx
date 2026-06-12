@@ -1,100 +1,88 @@
 'use client'
-
-import React, { useState, ChangeEvent, FormEvent } from 'react'
-import Navbar from '../components/Navbar'
-
+import Navbar from "../components/Navbar"
+import type {FormEvent} from 'react'
+import {AppContent} from '../context/AppContent'
+import { useContext, useEffect, useState, useRef} from "react"
 const Page = () => {
-  const [profileImage, setProfileImage] = useState<string>('https://png.pngtree.com/png-clipart/20190705/original/pngtree-vector-upload-icon-png-image_4267359.jpg')
-  const [name, setName] = useState<string>('')
-  const [email, setEmail] = useState<string>('')
-  const [message, setMessage] = useState<string>('')
-
-  const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setProfileImage(reader.result)
-      }
-    }
-    reader.readAsDataURL(file)
+  const [profileImage, setProfileImage]= useState<string>('https://png.pngtree.com/png-clipart/20190705/original/pngtree-vector-upload-icon-png-image_4267359.jpg')
+  const [name, setName] = useState('') 
+  const [email, setEmail]= useState('')
+  const [message, SendMessage]= useState('')
+  const fileInputRef= useRef<HTMLInputElement | null>(null)
+  const context = useContext(AppContent)
+  const userData= context?.userData
+  const backendUrl= context?.backendUrl
+  useEffect(()=>{
+  if(userData)
+  {
+   setName(prev => prev === userData.name ? prev : userData.name || '')
+   setEmail(prev => prev ===  userData.email ? prev : userData.email || '')
   }
-
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    setMessage('Profile updated successfully.')
+  },[userData?.name, userData?.email])
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+  {
+    const file= e.target.files?.[0]
+    if(!file) return
+    const imageUrl = URL.createObjectURL(file)
+    setProfileImage(imageUrl)
   }
+  const handlebuttonClick=()=>{
+    fileInputRef.current?.click()
+  }
+  const token= localStorage.getItem("token")
+  const handleSubmit = async(e: React.FormEvent<HTMLFormElement>)=>{
+   e.preventDefault()
+   try{
+    const res= await fetch(`${backendUrl}/update-profile`,{
+      method : "PUT",
+      headers :{
+        "Content-Type" : "application/json",
+        Authorization : `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name, email})
+    })
+    const data= await res.json()
+    if(res.ok)
+      SendMessage("Profile Updated Successfully")
+    else
+      SendMessage(data.message || "Updated failed")
 
+   }
+   catch (error) {
+    console.error(error)
+    SendMessage("Something went wrong")
+  }
+  }
   return (
     <>
-      <Navbar />
-      <main style={{ maxWidth: '900px', margin: '40px auto', padding: '0 16px' }}>
-        <section style={{ display: 'grid', gap: '24px', background: '#fff', borderRadius: '12px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <img
-              src={profileImage}
-              alt="Profile"
-              style={{ width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', border: '1px solid #ddd' }}
-            />
-            <div>
-              <h1 style={{ margin: 0, fontSize: '1.8rem' }}>{name}</h1>
-              <p style={{ margin: '8px 0 0', color: '#555' }}>{email}</p>
+      <Navbar/>
+      <div className="flex items-center justify-center ">
+        <div className="w-[350px] min-h-[400px] sm:w-[450px] shadow-xl">
+          <div className="flex items-center gap-10 p-5">
+            <img src={profileImage} alt='ProfileImage' className="w-[130px] h-[130px] object-cover rounded-full "/>
+            <div className="">
+              <h1 className="text-xl pt-5">{name}</h1>
+              <p className="mt-2">{email}</p>
             </div>
           </div>
-
-          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '16px' }}>
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <label htmlFor="profileImage" style={{ fontWeight: 600 }}>Profile Picture</label>
-             <label
-              htmlFor="profileImage"
-              className="inline-block bg-blue-500 w-30 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-600">
-              Choose File
-            </label>
-
-            <input
-              type="file"
-              id="profileImage"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            </div>
-
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <label htmlFor="name" style={{ fontWeight: 600 }}>Name</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <label htmlFor="email" style={{ fontWeight: 600 }}>Email</label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #ccc' }}
-              />
-            </div>
-
-            <button type="submit" style={{ padding: '12px 18px', borderRadius: '8px', border: 'none', background: '#2563eb', color: '#fff', cursor: 'pointer' }}>
-              Update Profile
-            </button>
+          <div className="ml-5">
+            <input type="file" ref={fileInputRef} onChange={handleImageChange} className="hidden"/>
+            <button type="button" onClick={handlebuttonClick} className="rounded bg-indigo-600 text-white font-semibold p-2 cursor-pointer">Upload Image</button></div>
+          <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-4">
+           <div className="flex flex-col gap-2">
+           <label htmlFor="name">Name</label>
+           <input id="name" type='text' value={name} onChange={(e)=>setName(e.target.value)}  className="border rounded p-2 "/>
+           </div> 
+           <div className="flex flex-col gap-2">
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" value={email} type="email" onChange={(e)=> setEmail(e.target.value)} className="border rounded p-2"/>
+           </div>
+            <button type="submit" className="m-2 p-2 rounded-full bg-indigo-700 hover:bg-indigo-600 cursor-pointer text-white font-semibold text-xl">Submit</button>
           </form>
-
-          {message && (
-            <div style={{ padding: '14px', background: '#ecfdf5', color: '#166534', borderRadius: '8px' }}>
-              {message}
-            </div>
-          )}
-        </section>
-      </main>
+          {message && <p className="text-green-600 font-semibold text-center mb-1">{message}</p>}
+        </div>
+      </div>
     </>
   )
 }

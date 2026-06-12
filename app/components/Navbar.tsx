@@ -12,7 +12,6 @@ import { assets } from "../assets/assets"
 type UserData = {
   email?: string
   isAccountVerified?: boolean
-
 }
 
 type AppContextType = {
@@ -29,7 +28,6 @@ const Navbar = () => {
   const [open, setOpen] = useState(false)
 
   const context = useContext(AppContent) as AppContextType | undefined
-
 
   if (!context) {
     throw new Error("AppContent must be used inside AppContextProvider")

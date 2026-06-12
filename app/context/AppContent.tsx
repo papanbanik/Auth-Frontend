@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useEffect, useState, ReactNode } from "react"
-import axios,{AxiosError} from "axios"
+import axios, { AxiosError } from "axios"
 import { toast } from "react-toastify"
 
 type UserData = {
@@ -9,6 +9,7 @@ type UserData = {
   name?: string
   isAccountVerified?: boolean
 }
+
 type LoginErrorResponse = {
   success?: false
   message?: string
@@ -44,10 +45,27 @@ export default function AppContextProvider({
   const getToken = () =>
     typeof window !== "undefined" ? localStorage.getItem("token") : null
 
+  // ================= REFRESH TOKEN =================
+  const refreshAccessToken = async (): Promise<string | null> => {
+    try {
+      const res = await axios.post(
+        `${backendUrl}/refresh`,
+        {},
+        { withCredentials: true } // ✅ cookie পাঠাবে
+      )
+      if (res.data.token) {
+        localStorage.setItem("token", res.data.token)
+        return res.data.token
+      }
+      return null
+    } catch {
+      return null
+    }
+  }
+
   // ================= CHECK AUTH =================
   const checkAuth = async () => {
     try {
-      // ✅ Check logout flag FIRST
       const isLoggedOut = localStorage.getItem("logout") === "true"
       if (isLoggedOut) {
         setIsLoggedin(false)
@@ -64,61 +82,71 @@ export default function AppContextProvider({
         return
       }
 
-      const res = await axios.get(`${backendUrl}/data`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      try {
+        const res = await axios.get(`${backendUrl}/data`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
 
-      if (res.data.success) {
-        setUserData(res.data.uservalue)
-        setIsLoggedin(true)
-      } else {
-        // ✅ Token invalid — just remove token, do NOT set logout flag
-        // Setting logout flag here would block future Google logins
+        if (res.data.success) {
+          setUserData(res.data.uservalue)
+          setIsLoggedin(true)
+        } else {
+          localStorage.removeItem("token")
+          setUserData(null)
+          setIsLoggedin(false)
+        }
+      } catch (err) {
+        const error = err as AxiosError
+        if (error.response?.status === 401) {
+          // ✅ accessToken expire — refresh করো
+          const newToken = await refreshAccessToken()
+          if (newToken) {
+            try {
+              const retryRes = await axios.get(`${backendUrl}/data`, {
+                headers: { Authorization: `Bearer ${newToken}` },
+              })
+              if (retryRes.data.success) {
+                setUserData(retryRes.data.uservalue)
+                setIsLoggedin(true)
+                return
+              }
+            } catch {
+              // retry ও fail — logout
+            }
+          }
+        }
         localStorage.removeItem("token")
         setUserData(null)
         setIsLoggedin(false)
       }
-    } catch {
-      localStorage.removeItem("token")
-      setUserData(null)
-      setIsLoggedin(false)
     } finally {
       setLoading(false)
     }
   }
 
   // ================= LOGIN =================
-  const loginUser = async (
-    email: string,
-    password: string
-  ): Promise<boolean> => {
+  const loginUser = async (email: string, password: string) => {
     try {
       const res = await axios.post(`${backendUrl}/login`, {
         email,
         password,
-      })
+      }, {withCredentials: true})
 
       if (!res.data.success || !res.data.token) {
         toast.error(res.data.message || "Invalid credentials")
         return false
       }
 
-      // ✅ Clear logout flag on intentional login
-      localStorage.removeItem("logout")
       localStorage.setItem("token", res.data.token)
+      localStorage.removeItem("logout")
 
       await checkAuth()
 
       return true
-    } 
-    catch(error:unknown) {
-      const err= error as AxiosError<LoginErrorResponse>
-     const res= err.response?.data
-     if(res?.code==="GOOGLE_ACCOUNT") {
-        toast.error("Google account detected. Please use Google Sign In.")
-      } else {
-        toast.error(res?.message ||"Login failed")
-      }
+    } catch (err) {
+      const error = err as AxiosError<LoginErrorResponse>
+      const message = error.response?.data?.message
+      toast.error(message || "Login failed")
       return false
     }
   }
@@ -133,11 +161,12 @@ export default function AppContextProvider({
         {},
         {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
+          withCredentials: true, // ✅ cookie clear হবে
         }
       )
 
       localStorage.removeItem("token")
-      localStorage.setItem("logout", "true") // ✅ SET flag, don't remove it
+      localStorage.setItem("logout", "true")
 
       setUserData(null)
       setIsLoggedin(false)
