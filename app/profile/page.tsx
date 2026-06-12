@@ -29,9 +29,9 @@ const Page = () => {
   const handlebuttonClick=()=>{
     fileInputRef.current?.click()
   }
-  const token= localStorage.getItem("token")
   const handleSubmit = async(e: React.FormEvent<HTMLFormElement>)=>{
    e.preventDefault()
+  const token= localStorage.getItem("token")
    try{
     const res= await fetch(`${backendUrl}/update-profile`,{
       method : "PUT",
