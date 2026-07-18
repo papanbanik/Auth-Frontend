@@ -5,9 +5,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "http",
-        // hostname: "localhost",
-        hostname: "auth-backend-rho-self.vercel.app",
+        hostname: "localhost",
         port: "3001",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "auth-backend-rho-self.vercel.app",
         pathname: "/uploads/**",
       },
     ],
