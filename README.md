@@ -14,4 +14,6 @@ This is complete **authentication system**. Writing clean, maintainable, and sca
 
 ![Image Alt](https://github.com/papanbanik/Auth-Frontend/blob/726d7f88a1958508dc3ec9a0c79af9c97c863743/Capture.JPG)]
 ![Image Alt](https://github.com/papanbanik/Auth-Frontend/blob/main/Capture4.JPG?raw=true)]
+![Image Alt](https://github.com/papanbanik/Auth-Frontend/blob/main/Capture2.JPG?raw=true)
+![Image Alt]([image_url](https://github.com/papanbanik/Auth-Frontend/blob/main/Capture4.JPG?raw=true))
 
