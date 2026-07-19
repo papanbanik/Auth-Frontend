@@ -13,5 +13,5 @@ This is complete **authentication system**. Writing clean, maintainable, and sca
  - Next.js, TypeScript, Node.js, Express.js, MongoDB, JWT Authentication, Google OAuth, Nodemailer (for email verification)
 
 ![Image Alt](https://github.com/papanbanik/Auth-Frontend/blob/726d7f88a1958508dc3ec9a0c79af9c97c863743/Capture.JPG)]
-![Image Alt]([https://github.com/papanbanik/Auth-Frontend/blob/726d7f88a1958508dc3ec9a0c79af9c97c863743/Capture.JPG)]
+![Image Alt](https://github.com/papanbanik/Auth-Frontend/blob/main/Capture4.JPG?raw=true)]
 
