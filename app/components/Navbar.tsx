@@ -98,6 +98,7 @@ const Navbar = () => {
                 alt="image-people"
                 width={100}
                 height={100}
+                unoptimized
                 className="w-full h-full object-cover"
               />
             ) : (

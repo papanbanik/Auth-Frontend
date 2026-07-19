@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { assets } from "../assets/assets";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { useSendResetOtp } from "./hooks/useSendResetOtp";
 import OtpInput from "./../context/OtpInput";
@@ -14,6 +14,7 @@ import { useResetPassword } from "./hooks/useResetPassword";
 const Page = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [secondsLeft, setsecondsLeft] = useState(0);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [step, setStep] = useState<0 | 1 | 2>(0);
@@ -22,6 +23,13 @@ const Page = () => {
   const { mutate: resetPasswordMutate, isPending: isResetting } =
     useResetPassword();
   const router = useRouter();
+  useEffect(() => {
+    if (secondsLeft <= 0) return;
+    const timer = setInterval(() => {
+      setsecondsLeft((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [secondsLeft]);
   const handleSendOtp = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -34,6 +42,7 @@ const Page = () => {
       onSuccess: (data) => {
         toast.success(data.message || "OTP sent successfully");
         setStep(1);
+        setsecondsLeft(60);
       },
       onError: (error: any) => {
         toast.error(
@@ -126,6 +135,30 @@ const Page = () => {
                 className="cursor-pointer bg-indigo-600 text-white w-full mt-5 p-2 rounded-lg"
               >
                 {isVerifying ? "Verifying.." : "Verify"}
+              </button>
+
+              <button
+                type="button"
+                disabled={secondsLeft > 0}
+                onClick={() => {
+                  mutate(email.trim(), {
+                    onSuccess: (data) => {
+                      toast.success(data.message || "OTP sent successfully");
+                      setsecondsLeft(60);
+                    },
+                    onError: (error: any) => {
+                      toast.error(
+                        error?.response?.data?.message ||
+                          "Failed to send reset OTP",
+                      );
+                    },
+                  });
+                }}
+                className={`text-white mt-5 pl-20 ${secondsLeft > 0 ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+              >
+                {secondsLeft > 0
+                  ? `Resend OTP in ${secondsLeft}s`
+                  : "Resend OTP"}
               </button>
             </form>
           </div>
