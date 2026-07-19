@@ -92,18 +92,8 @@ const Navbar = () => {
             onClick={() => setOpen(!open)}
             className="relative w-10 h-10 overflow-hidden rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold uppercase cursor-pointer"
           >
-            {userData.image ? (
-              <Image
-                src={`${backendUrl}/uploads/${userData.image}`}
-                alt="image-people"
-                width={100}
-                height={100}
-                unoptimized
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              emailFirstLetter
-            )}
+            {emailFirstLetter}
+
           </div>
           {open && (
             <div className="absolute right-0 mt-2 bg-white text-black p-3 rounded shadow-md min-w-[180px] z-50">
